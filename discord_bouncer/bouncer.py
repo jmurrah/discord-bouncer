@@ -26,8 +26,4 @@ async def on_ready():
 def main():
     load_dotenv()
     client.run(os.getenv("DISCORD_KEY"))
-
-    user = 
-
-    client.add_role = add_role()
     breakpoint()
