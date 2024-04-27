@@ -10,7 +10,7 @@ def handle_cancel():
 
 @app.route("/checkout/success", methods=["GET"])
 def handle_success():
-    return render_template("success.html")
+    return render_template("../../success.html")
 
 
 @app.route("/", methods=["GET"])
