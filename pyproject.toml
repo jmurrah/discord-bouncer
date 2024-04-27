@@ -6,8 +6,12 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.12"
+discord = "^2.3.2"
+python-dotenv = "^1.0.1"
 
+[tool.poetry.scripts]
+bouncer = "discord_bouncer.bouncer:main"
 
 [build-system]
 requires = ["poetry-core"]
