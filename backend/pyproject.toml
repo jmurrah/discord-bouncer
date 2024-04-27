@@ -9,9 +9,13 @@ readme = "README.md"
 python = "^3.12"
 discord = "^2.3.2"
 python-dotenv = "^1.0.1"
+stripe = "^9.4.0"
+flask = "^3.0.3"
 
 [tool.poetry.scripts]
-bouncer = "discord_bouncer.bouncer:main"
+bouncer = "discord_bouncer.bouncer:start_bouncer"
+stripe = "discord_bouncer.stripe:main"
+flask = "discord_bouncer.flask:main"
 
 [build-system]
 requires = ["poetry-core"]

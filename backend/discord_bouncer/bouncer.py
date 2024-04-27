@@ -23,7 +23,7 @@ async def on_ready():
     print(f"We have logged in as {client.user}")
 
 
-def main():
+def start_bouncer():
     load_dotenv()
     client.run(os.getenv("DISCORD_KEY"))
     breakpoint()
