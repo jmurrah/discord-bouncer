@@ -19,8 +19,8 @@ def create_checkout_session():
             },
         ],
         mode="payment",
-        success_url="https://example.com/success",
-        cancel_url="https://example.com/cancel",
+        success_url="http://127.0.0.1:5000/checkout/success",
+        cancel_url="http://127.0.0.1:5000/checkout/cancel",
     )
     return f"https://checkout.stripe.com/pay/{session.id}"
 

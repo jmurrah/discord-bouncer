@@ -5,12 +5,12 @@ app = Flask(__name__)
 
 @app.route("/checkout/cancel", methods=["GET"])
 def handle_cancel():
-    return render_template(".html")
+    return render_template("cancel.html")
 
 
 @app.route("/checkout/success", methods=["GET"])
 def handle_success():
-    return render_template("../../success.html")
+    return render_template("success.html")
 
 
 @app.route("/", methods=["GET"])
