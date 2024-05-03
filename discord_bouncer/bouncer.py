@@ -11,16 +11,16 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 
-# async def add_role(context: commands.Context, member: discord.Member, role: discord.Role):
-#     await member.add_roles(role)
-#     await context.send(f"Successfully gave the role {role.name} to {member.name}")
+async def add_role(channel: discord.Message.channel, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+    await channel.send(f"Successfully gave the role {role.name} to {member.name}")
 
 
-# async def remove_role(
-#     context: commands.Context, member: discord.Member, role: discord.Role
-# ):
-#     await member.remove_roles(role)
-#     await context.send(f"Successfully removed the role {role.name} from {member.name}")
+async def remove_role(
+    channel: discord.Message.channel, member: discord.Member, role: discord.Role
+):
+    await member.remove_roles(role)
+    await channel.send(f"Successfully removed the role {role.name} from {member.name}")
 
 @client.event
 async def on_message(message):
@@ -31,8 +31,17 @@ async def on_message(message):
     if message.content == "!payment":
         #check DB to see if the user has already paid/if a link is open
         url = create_checkout_session()
-        print(url)
-
+        await message.channel.send(f"Click the link below to pay for access to the channel:\n{url}")
+    
+    if message.content == "!add_role":
+        for role in message.guild.roles:
+            if role.name == "secret_chat":
+                await add_role(message.channel, message.author, role)
+    
+    if message.content == "!remove_role":
+        for role in message.guild.roles:
+            if role.name == "secret_chat":
+                await remove_role(message.channel, message.author, role)
 
 @client.event
 async def on_ready():
