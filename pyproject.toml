@@ -13,9 +13,9 @@ stripe = "^9.4.0"
 flask = "^3.0.3"
 
 [tool.poetry.scripts]
-bouncer = "discord_bouncer.bouncer:start_bouncer"
-stripe = "discord_bouncer.stripe:create_checkout_session"
-flask = "discord_bouncer.flask:main"
+bouncer = "discord_bouncer.discord_bouncer:start_bouncer"
+stripe = "discord_bouncer.checkout_session:handle_checkout_session"
+flask = "discord_bouncer.app:main"
 
 [build-system]
 requires = ["poetry-core"]
