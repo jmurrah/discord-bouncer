@@ -4,6 +4,9 @@ import os
 
 
 def create_checkout_session():
+    load_dotenv()
+    stripe.api_key = os.getenv("STRIPE_KEY")
+
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         line_items=[
@@ -22,9 +25,5 @@ def create_checkout_session():
         success_url="http://127.0.0.1:5000/checkout/success",
         cancel_url="http://127.0.0.1:5000/checkout/cancel",
     )
-    return f"https://checkout.stripe.com/pay/{session.id}"
 
-def main():
-    load_dotenv()
-    stripe.api_key = os.getenv("STRIPE_KEY")
-    print(create_checkout_session())
+    return f"https://checkout.stripe.com/pay/{session.id}"
