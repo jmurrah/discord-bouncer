@@ -7,11 +7,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-discord = "^2.3.2"
 python-dotenv = "^1.0.1"
 stripe = "^9.4.0"
 flask = "^3.0.3"
 python-dateutil = "^2.9.0.post0"
+pytz = "^2024.1"
+py-cord = "^2.5.0"
 
 [tool.poetry.scripts]
 bouncer = "discord_bouncer.discord_bouncer:start_bouncer"
