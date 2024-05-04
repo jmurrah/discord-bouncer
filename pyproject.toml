@@ -11,6 +11,7 @@ discord = "^2.3.2"
 python-dotenv = "^1.0.1"
 stripe = "^9.4.0"
 flask = "^3.0.3"
+python-dateutil = "^2.9.0.post0"
 
 [tool.poetry.scripts]
 bouncer = "discord_bouncer.discord_bouncer:start_bouncer"
