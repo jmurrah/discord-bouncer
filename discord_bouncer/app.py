@@ -1,8 +1,9 @@
 from flask import Flask, request, Response
 import stripe
-
+from .discord_bouncer import start_bouncer
 import logging
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
@@ -29,5 +30,6 @@ def handle_stripe_post():
     return Response(status=200)
 
 
-if __name__ == "__main__":
+def main():
     app.run(host="0.0.0.0", port=8080)
+    start_bouncer()

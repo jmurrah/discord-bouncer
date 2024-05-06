@@ -1,12 +1,10 @@
 import discord
-from discord.ext import commands
 from dotenv import load_dotenv
 import os
 from .checkout_session import get_payment_link, PAID_ROLE
 from .database import is_paid_user
 import logging
 
-logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +71,7 @@ def load_secrets_into_env():
         os.environ[secret_name] = secret_value
 
 
-def main():
+def start_bouncer():
     # load_secrets_into_env()
     load_dotenv(override=True)
     bot.run(os.getenv("DISCORD_KEY"))
