@@ -33,7 +33,7 @@ async def on_message(message):
     # if message.content == "!pay" or message.content == "!subscribe":
     #     if message.author in get_paid_users():
     #         await message.channel.send(
-    #             "You have already paid for access to the channel"
+    #             f"You have already paid for access to the {PAID_ROLE} Discord Role!"
     #         )
     #         return
 
