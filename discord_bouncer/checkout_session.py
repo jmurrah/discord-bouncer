@@ -34,15 +34,13 @@ def create_price(subscription: bool) -> stripe.Price:
 def create_payment_link(
     customer: discord.Message.author, subscription: bool
 ) -> stripe.PaymentLink:
-    start_date, end_date = get_role_access_dates()
-
     price = create_price(subscription)
 
     payment_link = stripe.PaymentLink.create(
         line_items=[{"price": price.id, "quantity": 1}],
         metadata={
             "discord_id": customer.id,
-            "discord_name": customer.name,
+            "discord_username": customer.name,
         },
     )
 
@@ -50,8 +48,9 @@ def create_payment_link(
 
 
 def get_payment_link(customer: discord.Message.author, subscription: bool) -> str:
-    load_dotenv(override=True)
-    stripe.api_key = os.getenv("STRIPE_KEY")
+    # load_dotenv(override=True)
+    stripe.api_key = os.getenv("STRIPE_TEST_KEY")
+    # stripe.api_key = os.getenv("STRIPE_PROD_KEY")
     payment_link = create_payment_link(customer, subscription)
 
     return payment_link.url

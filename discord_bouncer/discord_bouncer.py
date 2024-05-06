@@ -4,30 +4,36 @@ from dotenv import load_dotenv
 import os
 from .checkout_session import get_payment_link, PAID_ROLE
 from .database import is_paid_user
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
-client = discord.Bot(command_prefix="!", intents=intents)
-
-# async def add_role(
-#     channel: discord.Message.channel, member: discord.Member, role: discord.Role
-# ):
-#     await member.add_roles(role)
-#     await channel.send(f"Successfully gave the role {role.name} to {member.name}")
+bot = discord.Bot(command_prefix="!", intents=intents)
 
 
-# async def remove_role(
-#     channel: discord.Message.channel, member: discord.Member, role: discord.Role
-# ):
-#     await member.remove_roles(role)
-#     await channel.send(f"Successfully removed the role {role.name} from {member.name}")
+async def add_role(
+    channel: discord.Message.channel, member: discord.Member, role: discord.Role
+):
+    await member.add_roles(role)
+    await channel.send(f"Successfully gave the role {role.name} to {member.name}")
 
 
-@client.event
+async def remove_role(
+    channel: discord.Message.channel, member: discord.Member, role: discord.Role
+):
+    await member.remove_roles(role)
+    await channel.send(f"Successfully removed the role {role.name} from {member.name}")
+
+
+@bot.event
 async def on_message(message):
-    print(f"{message.author}: {message.content}")
+    logging.info(f"{message.author}: {message.content}")
 
     if message.content == "!pay" or message.content == "!subscribe":
         if is_paid_user(message.author.id):
@@ -37,17 +43,37 @@ async def on_message(message):
             return
 
         url = get_payment_link(message.author, message.content == "!subscribe")
-        thread = await message.create_thread(name=f"Payment - {message.author.name}", auto_archive_duration=60)
+        thread = await message.create_thread(
+            name=f"Payment - {message.author.name}", auto_archive_duration=60
+        )
         await thread.send(
             f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}"
         )
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f"We have logged in as {client.user}")
+    logging.info(f"We have logged in as {bot.user}")
 
 
-def start_bouncer():
+def load_secrets_into_env():
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+
+    secrets_manager = secretmanager.SecretManagerServiceClient()
+    secrets = secrets_manager.list_secrets(request={"parent": f"projects/{project_id}"})
+
+    for secret in secrets:
+        secret_version = secrets_manager.access_secret_version(
+            request={"name": f"{secret.name}/versions/latest"}
+        )
+
+        secret_value = secret_version.payload.data.decode("UTF-8")
+        secret_name = secret.name.split("/")[-1]
+
+        os.environ[secret_name] = secret_value
+
+
+def main():
+    # load_secrets_into_env()
     load_dotenv(override=True)
-    client.run(os.getenv("DISCORD_KEY"))
+    bot.run(os.getenv("DISCORD_KEY"))

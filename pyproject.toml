@@ -17,7 +17,7 @@ google-cloud-firestore = "^2.16.0"
 google-cloud-secret-manager = "^2.20.0"
 
 [tool.poetry.scripts]
-bouncer = "discord_bouncer.discord_bouncer:start_bouncer"
+bouncer = "discord_bouncer.discord_bouncer:main"
 stripe = "discord_bouncer.checkout_session:handle_checkout_session"
 flask = "discord_bouncer.app:main"
 
