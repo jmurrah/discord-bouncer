@@ -13,6 +13,8 @@ flask = "^3.0.3"
 python-dateutil = "^2.9.0.post0"
 pytz = "^2024.1"
 py-cord = "^2.5.0"
+google-cloud-firestore = "^2.16.0"
+google-cloud-secret-manager = "^2.20.0"
 
 [tool.poetry.scripts]
 bouncer = "discord_bouncer.discord_bouncer:start_bouncer"

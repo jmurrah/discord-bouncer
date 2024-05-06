@@ -4,23 +4,19 @@ import os
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import discord
+from google.cloud import secretmanager
 
 PAID_ROLE = "secret_chat"
 ROLE_PRICE = 500  # in cents = $5.00
 
 
-def get_role_access_dates() -> tuple[date, date]:
-    today = date.today()
-    return today, today + relativedelta(months=1)
-
-
 def create_price(subscription: bool) -> stripe.Price:
-    # end_date
+    end_date = date.today() + relativedelta(months=1)
 
     description = (
-        f"Subscription for Access to the {PAID_ROLE} Discord Role. Your subscription will auto-renew every month. The next payment will be on {get_role_access_dates()[1]}."
+        f"Subscription for Access to the {PAID_ROLE} Discord Role. Your subscription will auto-renew every month. The next payment will be on {end_date}."
         if subscription
-        else f"Access to the {PAID_ROLE} Discord Role for 1 month."
+        else f"Access to the {PAID_ROLE} Discord Role for 1 month. Your access will expire on {end_date}."
     )
 
     product = stripe.Product.create(
@@ -54,7 +50,7 @@ def create_payment_link(
 
 
 def get_payment_link(customer: discord.Message.author, subscription: bool) -> str:
-    load_dotenv()
+    load_dotenv(override=True)
     stripe.api_key = os.getenv("STRIPE_KEY")
     payment_link = create_payment_link(customer, subscription)
 

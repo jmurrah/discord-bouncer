@@ -3,7 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 from .checkout_session import get_payment_link, PAID_ROLE
-from .database import get_paid_users
+from .database import is_paid_user
 
 intents = discord.Intents.default()
 intents.members = True
@@ -28,20 +28,19 @@ client = discord.Bot(command_prefix="!", intents=intents)
 @client.event
 async def on_message(message):
     print(f"{message.author}: {message.content}")
-    x = message.id
-    print(x)
-    # if message.content == "!pay" or message.content == "!subscribe":
-    #     if message.author in get_paid_users():
-    #         await message.channel.send(
-    #             f"You have already paid for access to the {PAID_ROLE} Discord Role!"
-    #         )
-    #         return
 
-    #     url = get_payment_link(message.author, message.content == "!subscribe")
-    #     thread = await message.create_thread(name=f"Payment - {message.author.name}", auto_archive_duration=60)
-    #     await thread.send(
-    #         f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}"
-    #     )
+    if message.content == "!pay" or message.content == "!subscribe":
+        if is_paid_user(message.author.id):
+            await message.channel.send(
+                f"You have already paid for access to the {PAID_ROLE} Discord Role!"
+            )
+            return
+
+        url = get_payment_link(message.author, message.content == "!subscribe")
+        thread = await message.create_thread(name=f"Payment - {message.author.name}", auto_archive_duration=60)
+        await thread.send(
+            f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}"
+        )
 
 
 @client.event
