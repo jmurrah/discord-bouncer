@@ -16,6 +16,44 @@ intents.message_content = True
 
 bot = discord.Bot(command_prefix="!", intents=intents)
 
+REACTION_CHANNEL = "get-trusted-role"
+
+
+@bot.event
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
+    channel = bot.get_channel(payload.channel_id)
+    if not isinstance(channel, discord.TextChannel) or channel.name != REACTION_CHANNEL:
+        return
+
+    message = await channel.fetch_message(payload.message_id)
+    user = bot.get_user(payload.user_id)
+    emoji = payload.emoji.name
+
+    logging.info(f"{user.name} reacted with {emoji}")
+    print(f"{user.name} reacted with: {emoji}")
+
+    await message.remove_reaction(emoji, user)
+
+
+    if is_paid_user(user.id):
+        await channel.send(
+            f"You have already paid for access to the {PAID_ROLE} Discord Role!"
+        )
+        return
+    
+    if emoji in ["🪃", "💸"]:
+        url = get_payment_link(user, emoji == "🪃")
+        if emoji == "🪃":
+            await user.send(f"Click the link below to subscribe for access to the {PAID_ROLE} Discord Role:\n{url}")
+        else:
+            await user.send(f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}")
+
+
+@bot.event
+async def on_ready():
+    logging.info(f"We have logged in as {bot.user}")
+    print(f"We have logged in as {bot.user}")
+
 
 async def add_role(
     channel: discord.Message.channel, member: discord.Member, role: discord.Role
@@ -31,33 +69,6 @@ async def remove_role(
     await channel.send(f"Successfully removed the role {role.name} from {member.name}")
 
 
-@bot.event
-async def on_message(message):
-    logging.info(f"{message.author}: {message.content}")
-    print(f"{message.author}: {message.content}")
-
-    if message.content == "!pay" or message.content == "!subscribe":
-        if is_paid_user(message.author.id):
-            await message.channel.send(
-                f"You have already paid for access to the {PAID_ROLE} Discord Role!"
-            )
-            return
-
-        url = get_payment_link(message.author, message.content == "!subscribe")
-        thread = await message.create_thread(
-            name=f"Payment - {message.author.name}", auto_archive_duration=60
-        )
-        await thread.send(
-            f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}"
-        )
-
-
-@bot.event
-async def on_ready():
-    logging.info(f"We have logged in as {bot.user}")
-    print(f"We have logged in as {bot.user}")
-
-
 def load_secrets_into_env():
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
@@ -71,6 +82,7 @@ def load_secrets_into_env():
 
         secret_value = secret_version.payload.data.decode("UTF-8")
         secret_name = secret.name.split("/")[-1]
+        logger.info(f"Setting {secret_name} in environment!")
         print(f"Setting {secret_name} in environment!")
         os.environ[secret_name] = secret_value
 
