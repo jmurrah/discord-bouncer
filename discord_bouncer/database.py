@@ -8,7 +8,7 @@ def store_user(discord_id: str, access_end_date: date) -> None:
     user_ref.set({"access_end_date": access_end_date})
 
 
-def is_paid_user(discord_id: str) -> bool:
+def user_has_paid(discord_id: str) -> bool:
     return False
     db = firestore.Client()
     user_ref = db.collection("customers").document(discord_id)

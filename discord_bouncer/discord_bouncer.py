@@ -2,7 +2,7 @@ import discord
 from dotenv import load_dotenv
 import os
 from .checkout_session import get_payment_link, PAID_ROLE
-from .database import is_paid_user
+from .database import user_has_paid
 import logging
 from google.cloud import secretmanager
 
@@ -17,6 +17,7 @@ intents.message_content = True
 bot = discord.Bot(command_prefix="!", intents=intents)
 
 REACTION_CHANNEL = "get-trusted-role"
+PAYMENT_LOGS_CHANNEL = "payment-logs"
 
 
 @bot.event
@@ -30,29 +31,35 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     emoji = payload.emoji.name
 
     logging.info(f"{user.name} reacted with {emoji}")
-    print(f"{user.name} reacted with: {emoji}")
-
     await message.remove_reaction(emoji, user)
 
-
-    if is_paid_user(user.id):
+    if user_has_paid(user.id):
         await channel.send(
             f"You have already paid for access to the {PAID_ROLE} Discord Role!"
         )
         return
     
     if emoji in ["🪃", "💸"]:
+        payment_type = "subscribe" if emoji == "🪃" else "pay"
         url = get_payment_link(user, emoji == "🪃")
-        if emoji == "🪃":
-            await user.send(f"Click the link below to subscribe for access to the {PAID_ROLE} Discord Role:\n{url}")
-        else:
-            await user.send(f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}")
+        await user.send(f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}")
+
+
+@bot.event
+async def on_message(message: discord.Message):
+    if not isinstance(message.channel, discord.TextChannel) or message.channel.name != PAYMENT_LOGS_CHANNEL:
+        return
+    
+    # if message.startswith("Payment Successful"):
+    #     discord_id = message.content.split(" ")[-1]
+    #     member = message.mentions[0]
+    #     role = message.role_mentions[0]
+    #     await add_role(message.channel, member, role)
 
 
 @bot.event
 async def on_ready():
     logging.info(f"We have logged in as {bot.user}")
-    print(f"We have logged in as {bot.user}")
 
 
 async def add_role(
@@ -83,7 +90,6 @@ def load_secrets_into_env():
         secret_value = secret_version.payload.data.decode("UTF-8")
         secret_name = secret.name.split("/")[-1]
         logger.info(f"Setting {secret_name} in environment!")
-        print(f"Setting {secret_name} in environment!")
         os.environ[secret_name] = secret_value
 
 
