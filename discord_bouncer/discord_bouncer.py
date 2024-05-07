@@ -4,7 +4,9 @@ import os
 from .checkout_session import get_payment_link, PAID_ROLE
 from .database import is_paid_user
 import logging
+from google.cloud import secretmanager
 
+logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ async def remove_role(
 @bot.event
 async def on_message(message):
     logging.info(f"{message.author}: {message.content}")
+    print(f"{message.author}: {message.content}")
 
     if message.content == "!pay" or message.content == "!subscribe":
         if is_paid_user(message.author.id):
@@ -52,6 +55,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     logging.info(f"We have logged in as {bot.user}")
+    print(f"We have logged in as {bot.user}")
 
 
 def load_secrets_into_env():
@@ -67,11 +71,11 @@ def load_secrets_into_env():
 
         secret_value = secret_version.payload.data.decode("UTF-8")
         secret_name = secret.name.split("/")[-1]
-
+        print(f"Setting {secret_name} in environment!")
         os.environ[secret_name] = secret_value
 
 
-def start_bouncer():
+def main():
     # load_secrets_into_env()
     load_dotenv(override=True)
     bot.run(os.getenv("DISCORD_KEY"))

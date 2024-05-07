@@ -1,10 +1,8 @@
 import stripe
-from dotenv import load_dotenv
 import os
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import discord
-from google.cloud import secretmanager
 
 PAID_ROLE = "secret_chat"
 ROLE_PRICE = 500  # in cents = $5.00
@@ -50,7 +48,6 @@ def create_payment_link(
 def get_payment_link(customer: discord.Message.author, subscription: bool) -> str:
     # load_dotenv(override=True)
     stripe.api_key = os.getenv("STRIPE_TEST_KEY")
-    # stripe.api_key = os.getenv("STRIPE_PROD_KEY")
+    # stripe.api_key = os.getenv("STRIPE_LIVE_KEY")
     payment_link = create_payment_link(customer, subscription)
-
     return payment_link.url
