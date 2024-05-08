@@ -50,11 +50,20 @@ async def on_message(message: discord.Message):
     if not isinstance(message.channel, discord.TextChannel) or message.channel.name != PAYMENT_LOGS_CHANNEL:
         return
     
-    # if message.startswith("Payment Successful"):
-    #     discord_id = message.content.split(" ")[-1]
-    #     member = message.mentions[0]
-    #     role = message.role_mentions[0]
-    #     await add_role(message.channel, member, role)
+    data = {}
+    for line in message.content.strip().split("\n"):
+        key, value = line.split(": ", 1)
+        data[key] = value
+
+    if data["event"] == "checkout.session.completed":
+        role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
+        add_role(
+            message.channel,
+            message.guild.get_member(int(data["discord_id"])),
+            message.guild.get_role(role.id),
+        )
+    
+
 
 
 @bot.event
