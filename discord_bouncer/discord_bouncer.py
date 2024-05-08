@@ -38,18 +38,24 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
             f"You have already paid for access to the {PAID_ROLE} Discord Role!"
         )
         return
-    
+
     if emoji in ["🪃", "💸"]:
         payment_type = "subscribe" if emoji == "🪃" else "pay"
         url = get_payment_link(user, emoji == "🪃")
-        await user.send(f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}")
+        await user.send(
+            f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}"
+        )
 
 
 @bot.event
 async def on_message(message: discord.Message):
-    if not isinstance(message.channel, discord.TextChannel) or message.channel.name != PAYMENT_LOGS_CHANNEL:
+    if (
+        message.author == bot.user
+        or not isinstance(message.channel, discord.TextChannel)
+        or message.channel.name != PAYMENT_LOGS_CHANNEL
+    ):
         return
-    
+
     data = {}
     for line in message.content.strip().split("\n"):
         key, value = line.split(": ", 1)
@@ -57,13 +63,11 @@ async def on_message(message: discord.Message):
 
     if data["event"] == "checkout.session.completed":
         role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
-        add_role(
+        await add_role(
             message.channel,
             message.guild.get_member(int(data["discord_id"])),
             message.guild.get_role(role.id),
         )
-    
-
 
 
 @bot.event
