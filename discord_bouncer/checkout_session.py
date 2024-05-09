@@ -1,8 +1,9 @@
-import stripe
 import os
 from datetime import date
-from dateutil.relativedelta import relativedelta
+
 import discord
+import stripe
+from dateutil.relativedelta import relativedelta
 
 PAID_ROLE = "secret_chat"
 ROLE_PRICE = 100  # in cents = $5.00
