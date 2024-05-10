@@ -103,6 +103,11 @@ async def remove_roles_from_expired_users():
             await remove_role(PAYMENT_LOGS_CHANNEL, member, role)
 
 
+def on_snapshot(doc_snapshot, changes, read_time):
+    for doc in doc_snapshot:
+        logging.info(f"Received document snapshot: {doc.id}")
+
+
 def start_bot():
     setup_environment()
     bot.run(os.getenv("DISCORD_KEY"))

@@ -3,9 +3,9 @@ import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
-from google.cloud import secretmanager
+from google.cloud import firestore, secretmanager
 
-from .database import delete_expired_users
+from .database import delete_expired_users, handle_snapshot
 
 logging.basicConfig(level=logging.INFO)
 
@@ -35,7 +35,15 @@ def initialize_user_expiration_check():
     scheduler.start()
 
 
+def listen_to_database():
+    db = firestore.Client()
+    db.collection("recently_deleted_customers").document("customer_list").on_snapshot(
+        handle_snapshot
+    )
+
+
 def setup_environment():
     # load_secrets_into_env()
     load_dotenv(override=True)
     initialize_user_expiration_check()
+    listen_to_database()
