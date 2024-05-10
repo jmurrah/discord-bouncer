@@ -1,9 +1,11 @@
 import logging
+import os
 
 import discord
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .scheduler import get_expired_users, user_has_paid
+from .database import access_date_active
+from .setup import get_expired_users, setup_environment
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,8 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     logging.info(f"{user.name} reacted with {emoji}")
     await message.remove_reaction(emoji, user)
 
-    if user_has_paid(user.id):
+    if access_date_active(user.id):
+        logging.info(f"{user.name} already has access to the {PAID_ROLE} Discord Role!")
         await channel.send(
             f"You have already paid for access to the {PAID_ROLE} Discord Role!"
         )
@@ -96,5 +99,10 @@ async def remove_roles_from_expired_users():
         if member is None:
             continue
 
-        if user_has_paid(user_id):
+        if access_date_active(user_id):
             await remove_role(PAYMENT_LOGS_CHANNEL, member, role)
+
+
+def start_bot():
+    setup_environment()
+    bot.run(os.getenv("DISCORD_KEY"))

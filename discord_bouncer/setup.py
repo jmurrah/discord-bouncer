@@ -4,7 +4,8 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from google.cloud import secretmanager
-from .database import delete_expired_users, access_date_expired
+
+from .database import delete_expired_users
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,10 +17,6 @@ def get_expired_users():
     logger.info(f"Expired users: {expired_users}")
 
     return expired_users
-
-
-def user_has_paid(discord_id: str) -> bool:
-    return access_date_expired(discord_id)
 
 
 def load_secrets_into_env():
@@ -45,8 +42,7 @@ def initialize_user_expiration_check():
     scheduler.start()
 
 
-def main():
-    load_secrets_into_env()
-    # load_dotenv(override=True)
+def setup_environment():
+    # load_secrets_into_env()
+    load_dotenv(override=True)
     initialize_user_expiration_check()
-    bot.run(os.getenv("DISCORD_KEY"))
