@@ -12,13 +12,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_expired_users():
-    expired_users = delete_expired_users()
-    logger.info(f"Expired users: {expired_users}")
-
-    return expired_users
-
-
 def load_secrets_into_env():
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
@@ -38,7 +31,7 @@ def load_secrets_into_env():
 
 def initialize_user_expiration_check():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(get_expired_users, "cron", hour=0)
+    scheduler.add_job(delete_expired_users, "cron", hour=0)
     scheduler.start()
 
 

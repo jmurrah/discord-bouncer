@@ -4,8 +4,8 @@ import os
 import discord
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .database import access_date_active
-from .setup import get_expired_users, setup_environment
+from .database import access_date_active, get_expired_users
+from .setup import setup_environment
 
 logger = logging.getLogger(__name__)
 

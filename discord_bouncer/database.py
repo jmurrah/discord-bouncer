@@ -19,7 +19,7 @@ def access_date_active(discord_id: str) -> bool:
         access_end_date = datetime.strptime(
             user.to_dict()["access_end_date"], "%Y-%m-%d"
         ).date()
-        return access_end_date >= date.today()
+        return date.today() <= access_end_date
 
     return False
 
@@ -27,13 +27,13 @@ def access_date_active(discord_id: str) -> bool:
 def delete_expired_users() -> list[str]:
     db = firestore.Client()
     users = (
-        db.collection("customers")
-        .where("access_end_date", "<", datetime.date.today())
-        .stream()
+        db.collection("customers").where("access_end_date", "<", date.today()).stream()
     )
     user_discord_ids = [user.discord_id for user in users]
 
     for user in users:
         user.reference.delete()
 
-    return user_discord_ids
+    db.collection("deleted_customers").document(str(datetime.now())).set(
+        user_discord_ids
+    )
