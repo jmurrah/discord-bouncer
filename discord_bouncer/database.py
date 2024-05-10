@@ -9,8 +9,7 @@ def store_user(discord_id: str, access_end_date: date) -> None:
     user_ref.set({"access_end_date": access_end_date})
 
 
-def user_has_access(discord_id: str) -> bool:
-    return False
+def access_date_expired(discord_id: str) -> bool:
     db = firestore.Client()
     user_ref = db.collection("customers").document(discord_id)
     user = user_ref.get()
@@ -21,12 +20,14 @@ def user_has_access(discord_id: str) -> bool:
     return False
 
 
-def get_expired_users() -> list[str]:
+def delete_expired_users() -> list[str]:
     db = firestore.Client()
-    user_ref = db.collection("customers").document(discord_id)
-    user = user_ref.get()
+    users = (
+        db.collection("customers").where("access_end_date", "<", date.today()).stream()
+    )
+    user_discord_ids = [user.discord_id for user in users]
 
-    if user.exists:
-        return user.to_dict()["access_end_date"] < date.today()
+    for user in users:
+        user.reference.delete()
 
-    return ["list of expired discord ids"]
+    return user_discord_ids

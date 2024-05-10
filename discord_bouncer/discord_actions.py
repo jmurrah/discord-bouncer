@@ -3,8 +3,7 @@ import logging
 import discord
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .scheduler import update_users, user_has_paid
-from .database import get_expired_users, user_has_access
+from .scheduler import get_expired_users, user_has_paid
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +79,22 @@ async def add_role(
     await channel.send(f"Successfully gave the role {role.name} to {member.name}")
 
 
-async def remove_roles(
+async def remove_role(
     channel: discord.Message.channel, member: discord.Member, role: discord.Role
 ):
-    #remove multiple roles
-    pass 
-    # await member.remove_roles(role)
-    # await channel.send(f"Successfully removed the role {role.name} from {member.name}")
+    await member.remove_roles(role)
+    await channel.send(f"Successfully removed the role {role.name} from {member.name}")
+
+
+async def remove_roles_from_expired_users():
+    expired_users = get_expired_users()
+    guild = bot.guilds[0]
+    role = discord.utils.get(guild.roles, name=PAID_ROLE)
+
+    for user_id in expired_users:
+        member = guild.get_member(int(user_id))
+        if member is None:
+            continue
+
+        if user_has_paid(user_id):
+            await remove_role(PAYMENT_LOGS_CHANNEL, member, role)

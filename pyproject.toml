@@ -18,9 +18,7 @@ google-cloud-secret-manager = "^2.20.0"
 apscheduler = "^3.10.4"
 
 [tool.poetry.scripts]
-bouncer = "discord_bouncer.discord_bouncer:main"
-stripe = "discord_bouncer.checkout_session:handle_checkout_session"
-flask = "discord_bouncer.app:main"
+bouncer = "discord_bouncer.scheduler:main"
 
 [build-system]
 requires = ["poetry-core"]
