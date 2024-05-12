@@ -2,9 +2,14 @@ import logging
 import os
 
 import discord
+from google.cloud import firestore
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .database import access_date_active, get_expired_users
+from .database import (
+    access_date_active,
+    delete_expired_users,
+    get_recently_expired_users,
+)
 from .setup import setup_environment
 
 logger = logging.getLogger(__name__)
@@ -45,6 +50,9 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         await user.send(
             f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}"
         )
+
+    if emoji == "🧪":
+        delete_expired_users()
 
 
 @bot.event
@@ -90,7 +98,7 @@ async def remove_role(
 
 
 async def remove_roles_from_expired_users():
-    expired_users = get_expired_users()
+    expired_users = get_recently_expired_users()
     guild = bot.guilds[0]
     role = discord.utils.get(guild.roles, name=PAID_ROLE)
 
@@ -103,11 +111,24 @@ async def remove_roles_from_expired_users():
             await remove_role(PAYMENT_LOGS_CHANNEL, member, role)
 
 
-def on_snapshot(doc_snapshot, changes, read_time):
+def handle_snapshot(doc_snapshot, changes, read_time):
     for doc in doc_snapshot:
         logging.info(f"Received document snapshot: {doc.id}")
+        logging.info(f"Document data: {doc.to_dict()}")
+
+        x = get_recently_expired_users()
+        logging.info(f"Recently expired users: {x}")
+        # remove_roles_from_expired_users(get_recently_expired_users())
+
+
+def listen_to_database():
+    db = firestore.Client()
+    db.collection("recently_deleted_customers").document("customer_list").on_snapshot(
+        handle_snapshot
+    )
 
 
 def start_bot():
     setup_environment()
+    listen_to_database()
     bot.run(os.getenv("DISCORD_KEY"))

@@ -1,5 +1,7 @@
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, time
+
+from google.cloud import firestore
 
 
 def store_user(discord_id: str, access_end_date: date) -> None:
@@ -22,22 +24,23 @@ def access_date_active(discord_id: str) -> bool:
     return False
 
 
-def handle_snapshot(doc_snapshot, changes, read_time):
-    for doc in doc_snapshot:
-        logging.info(f"Received document snapshot: {doc.id}")
-        logging.info(f"Document data: {doc.to_dict()}")
-
-
 def delete_expired_users() -> list[str]:
     db = firestore.Client()
-    users = (
-        db.collection("customers").where("access_end_date", "<", date.today()).stream()
+    users = list(
+        db.collection("customers")
+        .where("access_end_date", "<", date.today().isoformat())
+        .stream()
     )
-    user_discord_ids = [user.discord_id for user in users]
 
     for user in users:
         user.reference.delete()
 
     db.collection("recently_deleted_customers").document("customer_list").update(
-        {"date_deleted": date.today(), "discord_ids": user_discord_ids}
+        {"date_deleted": str(date.today()), "deleted_discord_ids": [user.id for user in users]}
     )
+
+
+def get_recently_expired_users() -> list[str]:
+    db = firestore.Client()
+    doc = db.collection("recently_deleted_customers").document("customer_list").get()
+    return doc.to_dict()["deleted_discord_ids"] if doc.exists else []
