@@ -97,13 +97,12 @@ async def remove_role(
     await channel.send(f"Successfully removed the role {role.name} from {member.name}")
 
 
-async def remove_roles_from_expired_users():
-    expired_users = get_recently_expired_users()
+async def remove_roles_from_expired_users(expired_users: list[str]):
     guild = bot.guilds[0]
     role = discord.utils.get(guild.roles, name=PAID_ROLE)
 
-    for user_id in expired_users:
-        member = guild.get_member(int(user_id))
+    for discord_id in expired_users:
+        member = guild.get_member(int(discord_id))
         if member is None:
             continue
 
@@ -115,10 +114,7 @@ def handle_snapshot(doc_snapshot, changes, read_time):
     for doc in doc_snapshot:
         logging.info(f"Received document snapshot: {doc.id}")
         logging.info(f"Document data: {doc.to_dict()}")
-
-        x = get_recently_expired_users()
-        logging.info(f"Recently expired users: {x}")
-        # remove_roles_from_expired_users(get_recently_expired_users())
+        remove_roles_from_expired_users(get_recently_expired_users())
 
 
 def listen_to_database():
