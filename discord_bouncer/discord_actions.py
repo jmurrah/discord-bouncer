@@ -5,7 +5,6 @@ from datetime import datetime
 
 import discord
 from google.cloud import firestore
-from google.cloud.firestore_v1 import DocumentChange, DocumentSnapshot
 
 from .checkout_session import PAID_ROLE, get_payment_link
 from .database import (access_date_active, get_recently_expired_members,
@@ -121,9 +120,7 @@ async def remove_roles_from_expired_members(expired_member_discord_ids: list[str
         await remove_role(member, role)
 
 
-def handle_snapshot(
-    doc_snapshot: DocumentSnapshot, changes: list[DocumentChange], read_time: datetime
-):
+def handle_snapshot(doc_snapshot, changes, read_time):
     logging.info("Received document snapshot after change.")
     bot.loop.create_task(
         remove_roles_from_expired_members(get_recently_expired_members())
