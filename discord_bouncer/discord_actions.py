@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 
@@ -5,11 +6,8 @@ import discord
 from google.cloud import firestore
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .database import (
-    access_date_active,
-    delete_expired_users,
-    get_recently_expired_users,
-)
+from .database import (access_date_active, delete_expired_users,
+                       get_recently_expired_users)
 from .setup import setup_environment
 
 logger = logging.getLogger(__name__)
@@ -110,11 +108,15 @@ async def remove_roles_from_expired_users(expired_users: list[str]):
             await remove_role(PAYMENT_LOGS_CHANNEL, member, role)
 
 
-def handle_snapshot(doc_snapshot, changes, read_time):
+async def async_handle_snapshot(doc_snapshot, changes, read_time):
     for doc in doc_snapshot:
         logging.info(f"Received document snapshot: {doc.id}")
         logging.info(f"Document data: {doc.to_dict()}")
-        remove_roles_from_expired_users(get_recently_expired_users())
+        await remove_roles_from_expired_users(get_recently_expired_users())
+
+
+def handle_snapshot(doc_snapshot, changes, read_time):
+    asyncio.create_task(async_handle_snapshot(doc_snapshot, changes, read_time))
 
 
 def listen_to_database():
