@@ -7,7 +7,7 @@ import stripe
 from dateutil.relativedelta import relativedelta
 
 PAID_ROLE = "secret_chat"
-ROLE_PRICE = 1000  # in cents = $5.00
+ROLE_PRICE = 100  # in cents = $5.00
 
 
 def create_price(subscription: bool) -> stripe.Price:

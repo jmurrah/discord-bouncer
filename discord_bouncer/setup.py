@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 def load_secrets_into_env():
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
-
     secrets_manager = secretmanager.SecretManagerServiceClient()
     secrets = secrets_manager.list_secrets(request={"parent": f"projects/{project_id}"})
 
@@ -22,9 +21,9 @@ def load_secrets_into_env():
         secret_version = secrets_manager.access_secret_version(
             request={"name": f"{secret.name}/versions/latest"}
         )
-
         secret_value = secret_version.payload.data.decode("UTF-8")
         secret_name = secret.name.split("/")[-1]
+
         logger.info(f"Setting {secret_name} in environment!")
         os.environ[secret_name] = secret_value
 
