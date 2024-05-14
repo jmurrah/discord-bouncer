@@ -32,12 +32,14 @@ def delete_expired_users() -> list[str]:
         .stream()
     )
 
+    logging.info(f"Deleting {len(users)} expired users.")
     # for user in users:
     #     user.reference.delete()
 
     db.collection("recently_deleted_customers").document("customer_list").update(
         {
-            "date_deleted": str(date.today()),
+            # "date_deleted": str(date.today()),
+            "date_deleted": str(datetime.now()),
             "deleted_discord_ids": [user.id for user in users],
         }
     )

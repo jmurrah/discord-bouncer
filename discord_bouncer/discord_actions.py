@@ -35,19 +35,21 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     logging.info(f"{user.name} reacted with {emoji}")
     await message.remove_reaction(emoji, user)
 
-    if access_date_active(user.id):
-        logging.info(f"{user.name} already has access to the {PAID_ROLE} Discord Role!")
-        await channel.send(
-            f"You have already paid for access to the {PAID_ROLE} Discord Role!"
-        )
-        return
+    # if emoji not in ["🪃", "💸"]:
+    #     return
 
-    if emoji in ["🪃", "💸"]:
-        payment_type = "subscribe" if emoji == "🪃" else "pay"
-        url = get_payment_link(user, emoji == "🪃")
-        await user.send(
-            f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}"
-        )
+    # if access_date_active(user.id):
+    #     logging.info(f"{user.name} already has access to the {PAID_ROLE} Discord Role!")
+    #     await channel.send(
+    #         f"User {user.name} has already paid for access to the {PAID_ROLE} Discord Role!"
+    #     )
+    #     return
+
+    # payment_type = "subscribe" if emoji == "🪃" else "pay"
+    # url = get_payment_link(user, emoji == "🪃")
+    # await user.send(
+    #     f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}"
+    # )
 
     if emoji == "🧪":
         delete_expired_users()
@@ -62,10 +64,13 @@ async def on_message(message: discord.Message):
     ):
         return
 
-    data = {}
-    for line in message.content.strip().split("\n"):
-        key, value = line.split(": ", 1)
-        data[key] = value
+    try:
+        data = {}
+        for line in message.content.strip().split("\n"):
+            key, value = line.split(": ", 1)
+            data[key] = value
+    except ValueError:
+        return
 
     if data["event"] == "checkout.session.completed":
         role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
@@ -91,6 +96,7 @@ async def add_role(
 async def remove_role(
     channel: discord.Message.channel, member: discord.Member, role: discord.Role
 ):
+    channel = discord.utils.get(role.guild.channels, name=PAYMENT_LOGS_CHANNEL)
     await member.remove_roles(role)
     await channel.send(f"Successfully removed the role {role.name} from {member.name}")
 
@@ -104,11 +110,11 @@ async def remove_roles_from_expired_users(expired_users: list[str]):
         if member is None:
             continue
 
-        if access_date_active(user_id):
-            await remove_role(PAYMENT_LOGS_CHANNEL, member, role)
+        await remove_role(member, role)
 
 
 async def async_handle_snapshot(doc_snapshot, changes, read_time):
+    logging.info("Handling snapshot asynchronously...")
     for doc in doc_snapshot:
         logging.info(f"Received document snapshot: {doc.id}")
         logging.info(f"Document data: {doc.to_dict()}")
@@ -116,10 +122,17 @@ async def async_handle_snapshot(doc_snapshot, changes, read_time):
 
 
 def handle_snapshot(doc_snapshot, changes, read_time):
-    asyncio.create_task(async_handle_snapshot(doc_snapshot, changes, read_time))
+    logging.info("Received document snapshot after change...")
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(async_handle_snapshot(doc_snapshot, changes, read_time))
+    finally:
+        loop.close()
+
 
 
 def listen_to_database():
+    logging.info("Listening to database changes...")
     db = firestore.Client()
     db.collection("recently_deleted_customers").document("customer_list").on_snapshot(
         handle_snapshot
