@@ -12,13 +12,11 @@ ROLE_PRICE = 100  # in cents = $5.00
 
 def create_price(subscription: bool) -> stripe.Price:
     end_date = date.today() + relativedelta(months=1)
-
     description = (
         f"Subscription for Access to the {PAID_ROLE} Discord Role. Your subscription will auto-renew every month. The next payment will be on {end_date}."
         if subscription
         else f"Access to the {PAID_ROLE} Discord Role for 1 month. Your access will expire on {end_date}."
     )
-
     product = stripe.Product.create(
         name=f"{PAID_ROLE} Discord Role", description=description
     )
@@ -35,7 +33,6 @@ def create_payment_link(
     customer: discord.Message.author, subscription: bool
 ) -> stripe.PaymentLink:
     price = create_price(subscription)
-
     payment_link = stripe.PaymentLink.create(
         line_items=[{"price": price.id, "quantity": 1}],
         metadata={
@@ -52,4 +49,5 @@ def get_payment_link(customer: discord.Message.author, subscription: bool) -> st
     stripe.api_key = os.getenv("STRIPE_TEST_KEY")
     # stripe.api_key = os.getenv("STRIPE_LIVE_KEY")
     payment_link = create_payment_link(customer, subscription)
+    logging.info(f"Payment Link created: {payment_link.url}")
     return payment_link.url

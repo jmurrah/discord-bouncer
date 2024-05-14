@@ -5,7 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from google.cloud import secretmanager
 
-from .database import delete_expired_users
+from .database import delete_expired_members
 
 logging.basicConfig(level=logging.INFO)
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_secrets_into_env():
+    logger.info("Loading secrets into environment.")
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     secrets_manager = secretmanager.SecretManagerServiceClient()
     secrets = secrets_manager.list_secrets(request={"parent": f"projects/{project_id}"})
@@ -28,13 +29,15 @@ def load_secrets_into_env():
         os.environ[secret_name] = secret_value
 
 
-def initialize_user_expiration_check():
+def initialize_member_expiration_check():
+    logging.info("Setting up member expiration check.")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(delete_expired_users, "cron", hour=0)
+    scheduler.add_job(delete_expired_members, "cron", hour=0)
     scheduler.start()
 
 
 def setup_environment():
+    logging.info("Setting up environment.")
     # load_secrets_into_env()
     load_dotenv(override=True)
-    initialize_user_expiration_check()
+    initialize_member_expiration_check()

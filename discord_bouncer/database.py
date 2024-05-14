@@ -6,7 +6,7 @@ import pytz
 from google.cloud import firestore
 
 
-def convert_time_to_date(timestamp: time) -> date:
+def convert_time_to_date(timestamp: str) -> date:
     return (
         datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
         .replace(tzinfo=pytz.UTC)
@@ -15,7 +15,8 @@ def convert_time_to_date(timestamp: time) -> date:
     )
 
 
-def store_user(data: dict) -> None:
+def store_member(data: dict) -> None:
+    logging.info(f"Storing member: {data}")
     firestore.Client().collection("customers").document(data["discord_id"]).set(
         {
             "access_end_date": convert_time_to_date(data["time"]),
@@ -26,40 +27,40 @@ def store_user(data: dict) -> None:
 
 
 def access_date_active(discord_id: str) -> bool:
-    user = firestore.Client().collection("customers").document(str(discord_id)).get()
-    logging.info(f"User: {user.to_dict()}")
+    member = firestore.Client().collection("customers").document(str(discord_id)).get()
+    logging.info(f"Member: {member.to_dict()}")
 
-    if user.exists:
+    if member.exists:
         access_end_date = datetime.strptime(
-            user.to_dict()["access_end_date"], "%Y-%m-%d"
+            member.to_dict()["access_end_date"], "%Y-%m-%d"
         ).date()
         return date.today() <= access_end_date
 
     return False
 
 
-def delete_expired_users() -> list[str]:
+def delete_expired_members() -> list[str]:
     db = firestore.Client()
-
-    users = list(
+    members = list(
         db.collection("customers")
         .where("access_end_date", "<", date.today().isoformat())
         .stream()
     )
 
-    logging.info(f"Deleting {len(users)} expired users.")
-    for user in users:
-        user.reference.delete()
+    logging.info(f"Deleting {len(members)} expired members.")
+    for member in members:
+        logging.info(f"Deleting member: {member.to_dict()}")
+        member.reference.delete()
 
     db.collection("recently_deleted_customers").document("customer_list").update(
         {
             "date_deleted": str(date.today()),
-            "deleted_discord_ids": [user.id for user in users],
+            "deleted_discord_ids": [member.id for member in members],
         }
     )
 
 
-def get_recently_expired_users() -> list[str]:
+def get_recently_expired_members() -> list[str]:
     return (
         firestore.Client()
         .collection("recently_deleted_customers")
