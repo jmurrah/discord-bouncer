@@ -20,6 +20,7 @@ bot = discord.Bot(command_prefix="!", intents=intents)
 
 REACTION_CHANNEL = "get-trusted-role"
 PAYMENT_LOGS_CHANNEL = "payment-logs"
+ROLE_LOGS_CHANNEL = "role-logs"
 
 
 @bot.event
@@ -86,18 +87,19 @@ async def on_ready():
     logging.info(f"We have logged in as {bot.user}")
 
 
-async def add_role(
-    channel: discord.Message.channel, member: discord.Member, role: discord.Role
-):
+async def add_role(member: discord.Member, role: discord.Role):
+    channel = discord.utils.get(role.guild.channels, name=ROLE_LOGS_CHANNEL)
     await member.add_roles(role)
+
+    logging.info(f"Successfully gave the role {role.name} to {member.name}")
     await channel.send(f"Successfully gave the role {role.name} to {member.name}")
 
 
-async def remove_role(
-    channel: discord.Message.channel, member: discord.Member, role: discord.Role
-):
-    channel = discord.utils.get(role.guild.channels, name=PAYMENT_LOGS_CHANNEL)
+async def remove_role(member: discord.Member, role: discord.Role):
+    channel = discord.utils.get(role.guild.channels, name=ROLE_LOGS_CHANNEL)
     await member.remove_roles(role)
+
+    logging.info(f"Successfully removed the role {role.name} from {member.name}")
     await channel.send(f"Successfully removed the role {role.name} from {member.name}")
 
 
@@ -105,6 +107,7 @@ async def remove_roles_from_expired_users(expired_users: list[str]):
     guild = bot.guilds[0]
     role = discord.utils.get(guild.roles, name=PAID_ROLE)
 
+    logging.info(f"Removing roles from {len(expired_users)} expired users...")
     for discord_id in expired_users:
         member = guild.get_member(int(discord_id))
         if member is None:
@@ -113,25 +116,12 @@ async def remove_roles_from_expired_users(expired_users: list[str]):
         await remove_role(member, role)
 
 
-async def async_handle_snapshot(doc_snapshot, changes, read_time):
-    logging.info("Handling snapshot asynchronously...")
-    for doc in doc_snapshot:
-        logging.info(f"Received document snapshot: {doc.id}")
-        logging.info(f"Document data: {doc.to_dict()}")
-        await remove_roles_from_expired_users(get_recently_expired_users())
-
-
 def handle_snapshot(doc_snapshot, changes, read_time):
-    logging.info("Received document snapshot after change...")
-    loop = asyncio.new_event_loop()
-    try:
-        loop.run_until_complete(async_handle_snapshot(doc_snapshot, changes, read_time))
-    finally:
-        loop.close()
+    logging.info("Received document snapshot after change")
+    bot.loop.create_task(remove_roles_from_expired_users(get_recently_expired_users()))
 
 
-
-def listen_to_database():
+async def listen_to_database():
     logging.info("Listening to database changes...")
     db = firestore.Client()
     db.collection("recently_deleted_customers").document("customer_list").on_snapshot(
@@ -141,5 +131,5 @@ def listen_to_database():
 
 def start_bot():
     setup_environment()
-    listen_to_database()
+    asyncio.run(listen_to_database())
     bot.run(os.getenv("DISCORD_KEY"))
