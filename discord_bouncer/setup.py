@@ -40,6 +40,6 @@ def initialize_member_expiration_check():
 
 def setup_environment():
     logging.info("Setting up environment.")
-    # load_secrets_into_env()
-    load_dotenv(override=True)
+    load_secrets_into_env()
+    # load_dotenv(override=True)
     initialize_member_expiration_check()
