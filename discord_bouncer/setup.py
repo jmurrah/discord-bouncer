@@ -1,5 +1,6 @@
 import logging
 import os
+import warnings
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ from .database import delete_expired_members
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore", category=UserWarning, module="google.cloud.firestore")
 
 
 def load_secrets_into_env():

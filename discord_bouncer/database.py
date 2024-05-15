@@ -7,7 +7,7 @@ from google.cloud import firestore
 
 
 def convert_time_to_date(timestamp: str) -> date:
-    return (
+    return str(
         datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
         .replace(tzinfo=pytz.UTC)
         .astimezone(pytz.timezone(os.getenv("TZ")))
