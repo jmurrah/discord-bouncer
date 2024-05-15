@@ -1,16 +1,16 @@
+import logging
 import os
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from discord_bouncer import setup
-import logging
 
 
 @patch("os.getenv")
 @patch.dict("os.environ", {})
 def test_load_secrets_into_env(mock_getenv, mock_secretmanager_client):
     mock_getenv.return_value = "test_project"
-
     mock_secret = MagicMock()
     mock_secret.name = "projects/test_project/secrets/test_secret"
 
@@ -45,7 +45,9 @@ def test_initialize_member_expiration_check(mock_add_job, mock_start, caplog):
     mock_start.assert_called_once()
 
 
-def test_setup_environment(mock_load_secrets_into_env, mock_initialize_member_expiration_check, caplog):
+def test_setup_environment(
+    mock_load_secrets_into_env, mock_initialize_member_expiration_check, caplog
+):
     caplog.set_level(logging.INFO)
 
     setup.setup_environment()
@@ -69,5 +71,7 @@ def mock_load_secrets_into_env():
 
 @pytest.fixture
 def mock_initialize_member_expiration_check():
-    with patch("discord_bouncer.setup.initialize_member_expiration_check") as mock_initialize:
+    with patch(
+        "discord_bouncer.setup.initialize_member_expiration_check"
+    ) as mock_initialize:
         yield mock_initialize
