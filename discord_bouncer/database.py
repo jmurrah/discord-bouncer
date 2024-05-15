@@ -16,7 +16,6 @@ def convert_time_to_date(timestamp: str) -> date:
 
 
 def store_member(data: dict) -> None:
-    logging.info(f"Storing member: {data}")
     firestore.Client().collection("customers").document(data["discord_id"]).set(
         {
             "access_end_date": convert_time_to_date(data["time"]),
@@ -24,11 +23,11 @@ def store_member(data: dict) -> None:
             "subscription": data["payment_mode"] == "subscription",
         }
     )
+    logging.info(f"Stored member: {data}")
 
 
 def access_date_active(discord_id: str) -> bool:
     member = firestore.Client().collection("customers").document(str(discord_id)).get()
-    logging.info(f"Member: {member.to_dict()}")
 
     if member.exists:
         access_end_date = datetime.strptime(
