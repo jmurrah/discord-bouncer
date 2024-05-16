@@ -45,7 +45,21 @@ async def test_on_raw_reaction_add(
 
     await discord_actions.on_raw_reaction_add(payload)
 
-    assert "We have logged in as TestBot" in caplog.text
+    if emoji in ["🪃", "💸"]:
+        mock_user.remove_reaction.assert_called_once_with(emoji, mock_user)
+    else:
+        mock_user.remove_reaction.assert_not_called()
+
+    if access_date_active:
+        mock_channel.send.assert_called_once_with(
+            f"{mock_user.name} ({mock_user.id}) already has access to the {discord_actions.PAID_ROLE} Discord Role!"
+        )
+        mock_user.send.assert_not_called()
+    else:
+        mock_channel.send.assert_not_called()
+        mock_user.send.assert_called_once_with(
+            f"Click the link below to {'subscribe' if emoji == '🪃' else 'pay'} for access to the {discord_actions.PAID_ROLE} Discord Role:\nhttps://example.com"
+        )
 
 
 @pytest.mark.asyncio
