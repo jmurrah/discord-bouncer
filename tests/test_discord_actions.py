@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -200,9 +201,15 @@ def test_handle_snapshot(
     caplog.set_level(logging.INFO)
 
     with patch("discord_bouncer.discord_actions.FIRST_CALL", first_call):
-        mock_get_recently_expired_members.return_value = MagicMock()
-        mock_remove_roles_from_expired_members.return_value = MagicMock()
-        mock_bot.loop.create_task = MagicMock()
+        mock_get_recently_expired_members.return_value = ["1234567890"]
+        mock_bot.loop.create_task.side_effect = (
+            lambda x: asyncio.get_event_loop().run_until_complete(x)
+        )
+
+        async def async_magic():
+            pass
+
+        mock_remove_roles_from_expired_members.return_value = async_magic
 
         discord_actions.handle_snapshot("doc_snapshot", "changes", "read_time")
 
@@ -214,16 +221,30 @@ def test_handle_snapshot(
 
 
 @pytest.mark.asyncio
-async def test_listen_to_database(
-    mock_firestore_client, caplog
-):
+async def test_listen_to_database(mock_firestore_client, caplog):
     caplog.set_level(logging.INFO)
-    mock_firestore_client.return_value.collection.return_value.document.return_value.on_snapshot = MagicMock()
+    mock_firestore_client.return_value.collection.return_value.document.return_value.on_snapshot = (
+        MagicMock()
+    )
 
     await discord_actions.listen_to_database()
 
     assert "Listening to database changes..." in caplog.text
     mock_firestore_client.return_value.collection.return_value.document.return_value.on_snapshot.assert_called_once()
+
+
+@patch("os.getenv")
+def test_start_bot(mock_getenv, mock_setup_environment, mock_bot, caplog):
+    caplog.set_level(logging.INFO)
+
+    mock_setup_environment.return_value = None
+    mock_bot.run.return_value = None
+    mock_getenv.return_value = "TestKey"
+
+    discord_actions.start_bot()
+
+    assert "Starting BOT..." in caplog.text
+    mock_bot.run.assert_called_once()
 
 
 @pytest.fixture
@@ -288,3 +309,9 @@ def mock_get_recently_expired_members():
         "discord_bouncer.discord_actions.get_recently_expired_members"
     ) as mock_get_recently_expired:
         yield mock_get_recently_expired
+
+
+@pytest.fixture
+def mock_setup_environment():
+    with patch("discord_bouncer.discord_actions.setup_environment") as mock_setup:
+        yield mock_setup
