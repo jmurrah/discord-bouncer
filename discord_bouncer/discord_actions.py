@@ -6,12 +6,7 @@ import discord
 from google.cloud import firestore
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .database import (
-    access_date_active,
-    delete_expired_members,
-    get_recently_expired_members,
-    store_member,
-)
+from .database import access_date_active, get_recently_expired_members, store_member
 from .setup import setup_environment
 
 logger = logging.getLogger(__name__)
@@ -73,6 +68,7 @@ async def on_message(message: discord.Message):
             key, value = line.split(": ", 1)
             data[key] = value
     except ValueError:
+        logging.error("Error parsing message content.")
         return
 
     if data["event"] == "checkout.session.completed":

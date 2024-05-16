@@ -18,10 +18,7 @@ async def test_on_raw_reaction_add(
     mock_bot,
     mock_access_date_active,
     mock_get_payment_link,
-    caplog,
 ):
-    caplog.set_level(logging.INFO)
-
     mock_channel = MagicMock(spec=discord.TextChannel)
     mock_message = AsyncMock(spec=discord.Message)
     mock_user = MagicMock()
@@ -64,6 +61,68 @@ async def test_on_raw_reaction_add(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "message_content, value_error, should_add_role",
+    [
+        ("event: checkout.session.completed\ndiscord_id: 1234567890", False, True),
+        ("random: text", False, False),
+        ("wrong_channel_name", True, False),
+        ("should have value error", True, False),
+    ],
+)
+async def test_on_message(
+    message_content,
+    value_error,
+    should_add_role,
+    mock_discord_utils,
+    mock_store_member,
+    mock_add_role,
+    caplog,
+):
+    caplog.set_level(logging.ERROR)
+
+    mock_channel = MagicMock(spec=discord.TextChannel)
+    mock_channel.name = (
+        discord_actions.PAYMENT_LOGS_CHANNEL
+        if "wrong_channel_name" not in message_content
+        else "hello_world"
+    )
+
+    mock_discord_utils.get.return_value = MagicMock()
+
+    mock_message = MagicMock(spec=discord.Message)
+    mock_message.author = "TestUser"
+    mock_message.channel = mock_channel
+    mock_message.content = message_content
+    mock_message.guild.get_member.return_value = MagicMock()
+    mock_message.guild.get_role.return_value = MagicMock()
+
+    await discord_actions.on_message(mock_message)
+
+    if "wrong_channel_name" in message_content:
+        assert "" == caplog.text
+        mock_store_member.assert_not_called()
+        mock_add_role.assert_not_called()
+        return
+
+    assert (
+        "Error parsing message content." in caplog.text
+        if value_error
+        else "Error parsing message content." not in caplog.text
+    )
+    (
+        mock_store_member.assert_called_once()
+        if should_add_role
+        else mock_store_member.assert_not_called()
+    )
+    (
+        mock_add_role.assert_called_once()
+        if should_add_role
+        else mock_add_role.assert_not_called()
+    )
+
+
+@pytest.mark.asyncio
 async def test_on_ready(mock_bot, mock_listen_to_database, caplog):
     caplog.set_level(logging.INFO)
     mock_bot.user = "TestBot"
@@ -82,23 +141,35 @@ def mock_bot():
 
 @pytest.fixture
 def mock_access_date_active():
-    with patch(
-        "discord_bouncer.discord_actions.access_date_active"
-    ) as mock_access_date_active:
-        yield mock_access_date_active
+    with patch("discord_bouncer.discord_actions.access_date_active") as mock_active:
+        yield mock_active
 
 
 @pytest.fixture
 def mock_get_payment_link():
-    with patch(
-        "discord_bouncer.discord_actions.get_payment_link"
-    ) as mock_get_payment_link:
-        yield mock_get_payment_link
+    with patch("discord_bouncer.discord_actions.get_payment_link") as mock_get_link:
+        yield mock_get_link
+
+
+@pytest.fixture
+def mock_discord_utils():
+    with patch("discord_bouncer.discord_actions.discord.utils") as mock_discord_utils:
+        yield mock_discord_utils
+
+
+@pytest.fixture
+def mock_store_member():
+    with patch("discord_bouncer.discord_actions.store_member") as mock_store_member:
+        yield mock_store_member
+
+
+@pytest.fixture
+def mock_add_role():
+    with patch("discord_bouncer.discord_actions.add_role") as mock_add_role:
+        yield mock_add_role
 
 
 @pytest.fixture
 def mock_listen_to_database():
-    with patch(
-        "discord_bouncer.discord_actions.listen_to_database"
-    ) as mock_listen_to_database:
-        yield mock_listen_to_database
+    with patch("discord_bouncer.discord_actions.listen_to_database") as mock_listen:
+        yield mock_listen
