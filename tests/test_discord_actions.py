@@ -10,7 +10,7 @@ from discord_bouncer import discord_actions
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "emoji, access_date_active",
-    [("🪃", True), ("💸", True), ("🪃", False), ("💸", False)],
+    [("🪃", True), ("💸", True), ("🪃", False), ("💸", False), ("🧪", True)],
 )
 async def test_on_raw_reaction_add(
     emoji,
@@ -46,9 +46,10 @@ async def test_on_raw_reaction_add(
     await discord_actions.on_raw_reaction_add(payload)
 
     if emoji in ["🪃", "💸"]:
-        mock_user.remove_reaction.assert_called_once_with(emoji, mock_user)
+        mock_message.remove_reaction.assert_called_once_with(emoji, mock_user)
     else:
-        mock_user.remove_reaction.assert_not_called()
+        mock_message.remove_reaction.assert_not_called()
+        return
 
     if access_date_active:
         mock_channel.send.assert_called_once_with(
