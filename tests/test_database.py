@@ -117,12 +117,6 @@ def mock_convert_time_to_date():
 
 
 @pytest.fixture
-def mock_firestore_client():
-    with patch("google.cloud.firestore.Client") as mock_client:
-        yield mock_client
-
-
-@pytest.fixture
 def mock_date():
     with patch("discord_bouncer.database.date") as mock_date:
         yield mock_date

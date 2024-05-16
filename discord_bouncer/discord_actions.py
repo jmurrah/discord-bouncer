@@ -107,7 +107,7 @@ async def remove_role(member: discord.Member, role: discord.Role):
 
 
 async def remove_roles_from_expired_members(expired_member_discord_ids: list[str]):
-    guild = BOT.guilds[0]
+    guild = BOT.get_guild(int(os.getenv("GUILD_ID")))
     role = discord.utils.get(guild.roles, name=PAID_ROLE)
 
     logging.info(

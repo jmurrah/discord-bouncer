@@ -133,6 +133,99 @@ async def test_on_ready(mock_bot, mock_listen_to_database, caplog):
     mock_listen_to_database.assert_called_once()
 
 
+@pytest.mark.asyncio
+async def test_add_role(mock_discord_utils, caplog):
+    caplog.set_level(logging.INFO)
+
+    mock_member = MagicMock(spec=discord.Member)
+    mock_member.add_roles.return_value = AsyncMock()
+
+    mock_role = MagicMock(spec=discord.Role)
+    mock_channel = MagicMock(spec=discord.TextChannel)
+    mock_discord_utils.get.return_value = mock_channel
+
+    await discord_actions.add_role(mock_member, mock_role)
+
+    assert "Successfully gave the role" in caplog.text
+    mock_channel.send.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_remove_role(mock_discord_utils, caplog):
+    caplog.set_level(logging.INFO)
+
+    mock_member = MagicMock(spec=discord.Member)
+    mock_member.remove_roles.return_value = AsyncMock()
+
+    mock_role = MagicMock(spec=discord.Role)
+    mock_channel = MagicMock(spec=discord.TextChannel)
+    mock_discord_utils.get.return_value = mock_channel
+
+    await discord_actions.remove_role(mock_member, mock_role)
+
+    assert "Successfully removed the role" in caplog.text
+    mock_channel.send.assert_called_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("member", [None, "TestMember"])
+async def test_remove_roles_from_expired_members(
+    member, mock_bot, mock_discord_utils, mock_remove_role, caplog
+):
+    caplog.set_level(logging.INFO)
+
+    with patch("discord_bouncer.discord_actions.os.getenv", return_value="1234"):
+        mock_bot.get_guild.return_value = MagicMock()
+        mock_bot.get_guild.return_value.get_member.return_value = member
+        mock_discord_utils.get.return_value = MagicMock()
+
+        await discord_actions.remove_roles_from_expired_members(["56789"])
+
+        assert "Removing roles from 1 expired members..." in caplog.text
+        (
+            mock_remove_role.assert_called_once()
+            if member
+            else mock_remove_role.assert_not_called()
+        )
+
+
+@pytest.mark.parametrize("first_call", [True, False])
+def test_handle_snapshot(
+    first_call,
+    mock_bot,
+    mock_get_recently_expired_members,
+    mock_remove_roles_from_expired_members,
+    caplog,
+):
+    caplog.set_level(logging.INFO)
+
+    with patch("discord_bouncer.discord_actions.FIRST_CALL", first_call):
+        mock_get_recently_expired_members.return_value = MagicMock()
+        mock_remove_roles_from_expired_members.return_value = MagicMock()
+        mock_bot.loop.create_task = MagicMock()
+
+        discord_actions.handle_snapshot("doc_snapshot", "changes", "read_time")
+
+        assert (
+            "Received document snapshot after change." in caplog.text
+            if not first_call
+            else "" == caplog.text
+        )
+
+
+@pytest.mark.asyncio
+async def test_listen_to_database(
+    mock_firestore_client, caplog
+):
+    caplog.set_level(logging.INFO)
+    mock_firestore_client.return_value.collection.return_value.document.return_value.on_snapshot = MagicMock()
+
+    await discord_actions.listen_to_database()
+
+    assert "Listening to database changes..." in caplog.text
+    mock_firestore_client.return_value.collection.return_value.document.return_value.on_snapshot.assert_called_once()
+
+
 @pytest.fixture
 def mock_bot():
     with patch("discord_bouncer.discord_actions.BOT") as mock_bot:
@@ -164,12 +257,34 @@ def mock_store_member():
 
 
 @pytest.fixture
+def mock_listen_to_database():
+    with patch("discord_bouncer.discord_actions.listen_to_database") as mock_listen:
+        yield mock_listen
+
+
+@pytest.fixture
 def mock_add_role():
     with patch("discord_bouncer.discord_actions.add_role") as mock_add_role:
         yield mock_add_role
 
 
 @pytest.fixture
-def mock_listen_to_database():
-    with patch("discord_bouncer.discord_actions.listen_to_database") as mock_listen:
-        yield mock_listen
+def mock_remove_role():
+    with patch("discord_bouncer.discord_actions.remove_role") as mock_remove_role:
+        yield mock_remove_role
+
+
+@pytest.fixture
+def mock_remove_roles_from_expired_members():
+    with patch(
+        "discord_bouncer.discord_actions.remove_roles_from_expired_members"
+    ) as mock_remove_roles:
+        yield mock_remove_roles
+
+
+@pytest.fixture
+def mock_get_recently_expired_members():
+    with patch(
+        "discord_bouncer.discord_actions.get_recently_expired_members"
+    ) as mock_get_recently_expired:
+        yield mock_get_recently_expired
