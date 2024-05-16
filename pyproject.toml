@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "discord-bouncer"
 version = "1.0.0"
-description = "Discord Bot that leverages Stripe payments for role assignment"
+description = "A Discord Bot that leverages Stripe payments for role assignment"
 authors = ["Jacob Murrah <https://github.com/jmurrah>"]
 readme = "README.md"
 

@@ -90,7 +90,7 @@ async def add_role(member: discord.Member, role: discord.Role):
     channel = discord.utils.get(role.guild.channels, name=ROLE_LOGS_CHANNEL)
     await member.add_roles(role)
 
-    message = f"Successfully gave the role {role.name} to {member.name} ({member.id})"
+    message = f"Successfully gave the role <@&{role.id}> to <@{member.id}>"
     logging.info(message)
     await channel.send(message)
 
@@ -100,7 +100,7 @@ async def remove_role(member: discord.Member, role: discord.Role):
     await member.remove_roles(role)
 
     message = (
-        f"Successfully removed the role {role.name} from {member.name} ({member.id})"
+        f"Successfully removed the role <@&{role.id}> from <@{member.id}>"
     )
     logging.info(message)
     await channel.send(message)
