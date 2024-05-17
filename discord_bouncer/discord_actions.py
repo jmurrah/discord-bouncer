@@ -56,9 +56,8 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 @BOT.event
 async def on_message(message: discord.Message):
     if (
-        message.author == BOT.user
+        message.channel.name != PAYMENT_LOGS_CHANNEL
         or not isinstance(message.channel, discord.TextChannel)
-        or message.channel.name != PAYMENT_LOGS_CHANNEL
     ):
         return
 
