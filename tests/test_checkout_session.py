@@ -25,10 +25,18 @@ def test_create_price(
     assert result == {"id": "price_test"}
 
 
-def test_create_payment_link(mock_create_price, mock_stripe_payment_link_create):
+@pytest.mark.parametrize("subscription", [True, False])
+def test_create_payment_link(
+    subscription, mock_create_price, mock_stripe_payment_link_create
+):
     mock_customer = MagicMock(id="customer_id")
     mock_customer.name = "customer_name"
-    mock_create_price.return_value = MagicMock(id="price_id")
+
+    mock_create_price.return_value = MagicMock(
+        id="price_id",
+        product=MagicMock(metadata={"end_date": "01234"} if subscription else {}),
+    )
+
     mock_stripe_payment_link_create.return_value = {"id": "payment_link_id"}
 
     result = checkout_session.create_payment_link(mock_customer, True)
@@ -39,6 +47,7 @@ def test_create_payment_link(mock_create_price, mock_stripe_payment_link_create)
         metadata={
             "discord_id": "customer_id",
             "discord_username": "customer_name",
+            **({"end_date": "01234"} if subscription else {}),
         },
     )
     assert result == {"id": "payment_link_id"}

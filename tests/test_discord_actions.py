@@ -66,6 +66,7 @@ async def test_on_raw_reaction_add(
     "message_content, value_error, should_add_role",
     [
         ("event: checkout.session.completed\ndiscord_id: 1234567890", False, True),
+        ("event: invoice.payment_succeeded\ndiscord_id: 1234567890", False, False),
         ("random: text", False, False),
         ("wrong_channel_name", True, False),
         ("should have value error", True, False),
@@ -80,7 +81,7 @@ async def test_on_message(
     mock_add_role,
     caplog,
 ):
-    caplog.set_level(logging.ERROR)
+    caplog.set_level(logging.INFO)
 
     mock_channel = MagicMock(spec=discord.TextChannel)
     mock_channel.name = (
@@ -91,10 +92,12 @@ async def test_on_message(
 
     mock_discord_utils.get.return_value = MagicMock()
 
-    mock_message = MagicMock(spec=discord.Message)
-    mock_message.author = "TestUser"
-    mock_message.channel = mock_channel
-    mock_message.content = message_content
+    mock_message = MagicMock(
+        spec=discord.Message,
+        author="TestUser",
+        channel=mock_channel,
+        content=message_content,
+    )
     mock_message.guild.get_member.return_value = MagicMock()
     mock_message.guild.get_role.return_value = MagicMock()
 
@@ -111,15 +114,15 @@ async def test_on_message(
         if value_error
         else "Error parsing message content." not in caplog.text
     )
-    (
-        mock_store_member.assert_called_once()
-        if should_add_role
-        else mock_store_member.assert_not_called()
+    assert (
+        mock_store_member.called
+        if "checkout.session.completed" in message_content
+        or "invoice.payment_succeeded" in message_content
+        else not mock_store_member.called
     )
-    (
-        mock_add_role.assert_called_once()
-        if should_add_role
-        else mock_add_role.assert_not_called()
+    assert mock_add_role.called if should_add_role else not mock_add_role.called
+    assert ("invoice.payment_succeeded" in message_content) == (
+        "Subscription payment succeeded" in caplog.text
     )
 
 

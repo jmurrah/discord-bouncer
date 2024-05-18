@@ -22,7 +22,7 @@ def test_store_member(mock_convert_time_to_date, mock_firestore_client, caplog):
 
     member_data = {
         "event": "checkout.session.completed",
-        "time": "2024-03-09T02:41:10.000Z",
+        "end_date": "2024-03-09T02:41:10.000Z",
         "link_id": "cs_test_1234567890",
         "payment_mode": "subscription",
         "discord_id": 1234567890,
