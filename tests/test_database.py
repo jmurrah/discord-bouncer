@@ -7,11 +7,6 @@ import pytest
 from discord_bouncer import database
 
 
-def test_convert_time_to_date():
-    with patch.dict("os.environ", {"TZ": "America/Chicago"}):
-        assert database.convert_time_to_date("2024-03-09T02:41:10.000Z") == "2024-03-08"
-
-
 def test_store_member(mock_convert_time_to_date, mock_firestore_client, caplog):
     caplog.set_level(logging.INFO)
     mock_convert_time_to_date.return_value = "2024-03-08"

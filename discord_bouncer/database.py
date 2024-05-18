@@ -6,19 +6,12 @@ import pytz
 from google.cloud import firestore
 
 
-def convert_time_to_date(timestamp: str) -> date:
-    return str(
-        datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
-        .replace(tzinfo=pytz.UTC)
-        .astimezone(pytz.timezone(os.getenv("TZ")))
-        .date()
-    )
-
-
 def store_member(data: dict) -> None:
     firestore.Client().collection("customers").document(data["discord_id"]).set(
         {
-            "access_end_date": convert_time_to_date(data["end_date"]),
+            "access_end_date": str(
+                datetime.datetime.fromtimestamp(data["end_date"]).date().isoformat()
+            ),
             "discord_username": data["discord_username"],
             "subscription": data["payment_mode"] == "subscription",
         }

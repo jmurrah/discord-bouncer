@@ -43,7 +43,9 @@ def create_payment_link(
     customer: discord.Message.author, subscription: bool
 ) -> stripe.PaymentLink:
     price = create_price(subscription)
-    end_date = price.product.metadata.get("end_date")
+    product = stripe.Product.retrieve(price.product)
+    end_date = product.metadata.get("end_date")
+
     payment_link = stripe.PaymentLink.create(
         line_items=[{"price": price.id, "quantity": 1}],
         metadata={
