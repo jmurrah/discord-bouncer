@@ -10,7 +10,7 @@ def store_member(data: dict) -> None:
     firestore.Client().collection("customers").document(data["discord_id"]).set(
         {
             "access_end_date": str(
-                datetime.datetime.fromtimestamp(data["end_date"]).date().isoformat()
+                datetime.fromtimestamp(int(data["end_date"])).date().isoformat()
             ),
             "discord_username": data["discord_username"],
             "subscription": data["payment_mode"] == "subscription",

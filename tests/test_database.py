@@ -7,9 +7,8 @@ import pytest
 from discord_bouncer import database
 
 
-def test_store_member(mock_convert_time_to_date, mock_firestore_client, caplog):
+def test_store_member(mock_firestore_client, caplog):
     caplog.set_level(logging.INFO)
-    mock_convert_time_to_date.return_value = "2024-03-08"
     mock_document = (
         mock_firestore_client.return_value.collection.return_value.document.return_value
     )
@@ -17,7 +16,7 @@ def test_store_member(mock_convert_time_to_date, mock_firestore_client, caplog):
 
     member_data = {
         "event": "checkout.session.completed",
-        "end_date": "2024-03-09T02:41:10.000Z",
+        "end_date": "1583950910",
         "link_id": "cs_test_1234567890",
         "payment_mode": "subscription",
         "discord_id": 1234567890,
@@ -25,7 +24,6 @@ def test_store_member(mock_convert_time_to_date, mock_firestore_client, caplog):
     }
     database.store_member(member_data)
 
-    assert mock_convert_time_to_date.call_count == 1
     assert mock_document.set.call_count == 1
     assert f"Stored member: {member_data}" in caplog.text
 
@@ -103,12 +101,6 @@ def test_get_recently_expired_members(
     )
 
     assert database.get_recently_expired_members() == expected
-
-
-@pytest.fixture
-def mock_convert_time_to_date():
-    with patch("discord_bouncer.database.convert_time_to_date") as mock_convert:
-        yield mock_convert
 
 
 @pytest.fixture
