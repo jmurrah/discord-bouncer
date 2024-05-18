@@ -6,7 +6,12 @@ import discord
 from google.cloud import firestore
 
 from .checkout_session import PAID_ROLE, get_payment_link
-from .database import access_date_active, get_recently_expired_members, store_member
+from .database import (
+    access_date_active,
+    delete_expired_members,
+    get_recently_expired_members,
+    store_member,
+)
 from .setup import setup_environment
 
 logger = logging.getLogger(__name__)
@@ -43,7 +48,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if access_date_active(member.id):
         message = f"{member.name} ({member.id}) already has access to the {PAID_ROLE} Discord Role!"
         logging.info(message)
-        await channel.send(message)
+        await member.send(message)
         return
 
     payment_type = "subscribe" if emoji == "🪃" else "pay"
