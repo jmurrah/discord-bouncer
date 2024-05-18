@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import date
+from datetime import date, datetime
 
 import discord
 import stripe
@@ -18,7 +18,17 @@ def create_price(subscription: bool) -> stripe.Price:
         else f"Access to the {PAID_ROLE} Discord Role for 1 month. Your access will expire on {end_date}."
     )
     product = stripe.Product.create(
-        name=f"{PAID_ROLE} Discord Role", description=description
+        name=f"{PAID_ROLE} Discord Role",
+        description=description,
+        metadata=(
+            {
+                "end_date": str(
+                    datetime(end_date.year, end_date.month, end_date.day).timestamp()
+                )
+            }
+            if not subscription
+            else None
+        ),
     )
 
     return stripe.Price.create(
@@ -33,11 +43,13 @@ def create_payment_link(
     customer: discord.Message.author, subscription: bool
 ) -> stripe.PaymentLink:
     price = create_price(subscription)
+    end_date = price.product.metadata.get("end_date")
     payment_link = stripe.PaymentLink.create(
         line_items=[{"price": price.id, "quantity": 1}],
         metadata={
             "discord_id": customer.id,
             "discord_username": customer.name,
+            **({"end_date": end_date} if end_date else {}),
         },
     )
 

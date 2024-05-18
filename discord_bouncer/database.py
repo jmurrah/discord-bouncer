@@ -18,7 +18,7 @@ def convert_time_to_date(timestamp: str) -> date:
 def store_member(data: dict) -> None:
     firestore.Client().collection("customers").document(data["discord_id"]).set(
         {
-            "access_end_date": convert_time_to_date(data["time"]),
+            "access_end_date": convert_time_to_date(data["end_date"]),
             "discord_username": data["discord_username"],
             "subscription": data["payment_mode"] == "subscription",
         }

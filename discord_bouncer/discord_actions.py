@@ -55,28 +55,38 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
 @BOT.event
 async def on_message(message: discord.Message):
-    if (
-        message.channel.name != PAYMENT_LOGS_CHANNEL
-        or not isinstance(message.channel, discord.TextChannel)
+    if message.channel.name != PAYMENT_LOGS_CHANNEL or not isinstance(
+        message.channel, discord.TextChannel
     ):
         return
 
     try:
-        data = {"event": ""}
+        data = {}
         for line in message.content.strip().split("\n"):
             key, value = line.split(": ", 1)
             data[key] = value
+
+        if data.get("event") not in [
+            "checkout.session.completed",
+            "invoice.payment_succeeded",
+        ]:
+            return
     except ValueError:
         logging.error("Error parsing message content.")
         return
 
+    store_member(data)
+
     if data["event"] == "checkout.session.completed":
         role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
-        store_member(data)
         await add_role(
             message.guild.get_member(int(data["discord_id"])),
             message.guild.get_role(role.id),
         )
+        logging.info(f"Checkout session completed for {data['discord_id']}")
+
+    else:
+        logging.info(f"Subscription payment succeeded for {data['discord_id']}")
 
 
 @BOT.event
@@ -98,9 +108,7 @@ async def remove_role(member: discord.Member, role: discord.Role):
     channel = discord.utils.get(role.guild.channels, name=ROLE_LOGS_CHANNEL)
     await member.remove_roles(role)
 
-    message = (
-        f"Successfully removed the role <@&{role.id}> from <@{member.id}>"
-    )
+    message = f"Successfully removed the role <@&{role.id}> from <@{member.id}>"
     logging.info(message)
     await channel.send(message)
 
