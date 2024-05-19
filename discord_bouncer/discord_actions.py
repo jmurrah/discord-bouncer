@@ -33,7 +33,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if (
         not isinstance(channel, discord.TextChannel)
         or channel.name != REACTION_CHANNEL
-        or emoji not in ["🪃", "💸"]
+        or emoji != "💸"
     ):
         return
 
@@ -46,10 +46,9 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         await member.send(message)
         return
 
-    payment_type = "subscribe" if emoji == "🪃" else "pay"
-    url = get_payment_link(member, emoji == "🪃")
+    url = get_payment_link(member)
     await member.send(
-        f"Click the link below to {payment_type} for access to the {PAID_ROLE} Discord Role:\n{url}"
+        f"Click the link below to pay for access to the {PAID_ROLE} Discord Role:\n{url}"
     )
 
 
@@ -67,27 +66,21 @@ async def on_message(message: discord.Message):
             key, value = line.split(": ", 1)
             data[key] = value
 
-        if data.get("event") not in [
-            "checkout.session.completed",
-            "invoice.payment_succeeded",
-        ]:
+        if data.get("event") != "checkout.session.completed":
             return
+        
     except ValueError:
         logging.error("Error parsing message content.")
         return
 
     store_member(data)
-
-    if data["event"] == "checkout.session.completed":
-        role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
-        await add_role(
-            message.guild.get_member(int(data["discord_id"])),
-            message.guild.get_role(role.id),
-        )
-        logging.info(f"Checkout session completed for {data['discord_id']}")
-
-    else:
-        logging.info(f"Subscription payment succeeded for {data['discord_id']}")
+    
+    role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
+    await add_role(
+        message.guild.get_member(int(data["discord_id"])),
+        message.guild.get_role(role.id),
+    )
+    logging.info(f"Checkout session completed for {data['discord_id']}")
 
 
 @BOT.event
