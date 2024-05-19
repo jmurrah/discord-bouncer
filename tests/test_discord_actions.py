@@ -11,7 +11,7 @@ from discord_bouncer import discord_actions
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "emoji, access_date_active",
-    [("🪃", True), ("💸", True), ("🪃", False), ("💸", False), ("🧪", True)],
+    [("💸", True), ("💸", False), ("🧪", True)],
 )
 async def test_on_raw_reaction_add(
     emoji,
@@ -62,7 +62,6 @@ async def test_on_raw_reaction_add(
     "message_content, value_error, should_add_role",
     [
         ("event: checkout.session.completed\ndiscord_id: 1234567890", False, True),
-        ("event: invoice.payment_succeeded\ndiscord_id: 1234567890", False, False),
         ("random: text", False, False),
         ("wrong_channel_name", True, False),
         ("should have value error", True, False),

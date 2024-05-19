@@ -16,7 +16,9 @@ def create_price() -> tuple[stripe.Price, str]:
         name=f"{PAID_ROLE} Discord Role",
         description=f"Access to the {PAID_ROLE} Discord Role for 1 month. Your access will expire on {end_date}.",
     )
-    unix_timestamp = str(datetime(end_date.year, end_date.month, end_date.day).timestamp())
+    unix_timestamp = str(
+        datetime(end_date.year, end_date.month, end_date.day).timestamp()
+    )
 
     return (
         stripe.Price.create(

@@ -68,13 +68,13 @@ async def on_message(message: discord.Message):
 
         if data.get("event") != "checkout.session.completed":
             return
-        
+
     except ValueError:
         logging.error("Error parsing message content.")
         return
 
     store_member(data)
-    
+
     role = discord.utils.get(message.guild.roles, name=PAID_ROLE)
     await add_role(
         message.guild.get_member(int(data["discord_id"])),
