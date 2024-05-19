@@ -7,10 +7,11 @@ from google.cloud import firestore
 
 
 def store_member(data: dict) -> None:
+    logging.info(f"Storing member: {data}")
     firestore.Client().collection("customers").document(data["discord_id"]).set(
         {
             "access_end_date": str(
-                datetime.fromtimestamp(int(data["end_date"])).date().isoformat()
+                datetime.fromtimestamp(int(float(data["end_date"]))).date().isoformat()
             ),
             "discord_username": data["discord_username"],
             "subscription": data["payment_mode"] == "subscription",

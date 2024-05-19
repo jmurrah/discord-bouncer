@@ -6,7 +6,7 @@ import discord
 import stripe
 from dateutil.relativedelta import relativedelta
 
-PAID_ROLE = "secret_chat"
+PAID_ROLE = "Trusted Trader"
 ROLE_PRICE = 50  # in cents = $5.00
 
 
@@ -59,9 +59,7 @@ def create_payment_link(
 
 
 def get_payment_link(customer: discord.Message.author, subscription: bool) -> str:
-    # load_dotenv(override=True)
-    stripe.api_key = os.getenv("STRIPE_TEST_KEY")
-    # stripe.api_key = os.getenv("STRIPE_LIVE_KEY")
+    stripe.api_key = os.getenv("STRIPE_LIVE_KEY")
     payment_link = create_payment_link(customer, subscription)
     logging.info(f"Payment Link created: {payment_link.url}")
     return payment_link.url
