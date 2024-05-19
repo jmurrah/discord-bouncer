@@ -1,21 +1,37 @@
 [tool.poetry]
 name = "discord-bouncer"
-version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+version = "1.0.0"
+description = "A Discord Bot that leverages Stripe payments for role assignment"
+authors = ["Jacob Murrah <https://github.com/jmurrah>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
-discord = "^2.3.2"
+python = "^3.10"
 python-dotenv = "^1.0.1"
 stripe = "^9.4.0"
 flask = "^3.0.3"
+python-dateutil = "^2.9.0.post0"
+pytz = "^2024.1"
+py-cord = "^2.5.0"
+google-cloud-firestore = "^2.16.0"
+google-cloud-secret-manager = "^2.20.0"
+apscheduler = "^3.10.4"
 
 [tool.poetry.scripts]
-bouncer = "discord_bouncer.bouncer:start_bouncer"
-stripe = "discord_bouncer.stripe:main"
-flask = "discord_bouncer.flask:main"
+bouncer = "discord_bouncer.discord_actions:start_bot"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+black = "^24.4.2"
+isort = "^5.13.2"
+coverage = "^7.5.1"
+pytest-asyncio = "^0.23.6"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning", 
+]
 
 [build-system]
 requires = ["poetry-core"]
