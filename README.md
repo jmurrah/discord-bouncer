@@ -8,7 +8,7 @@ A Discord Bot that leverages Stripe payments for role assignment.
 
 ![image](https://github.com/jmurrah/discord-bouncer/assets/110310485/79dd7e33-a3fd-417f-9147-dfd78b716558)
 
-3) Upon reacting, the bot sends a Direct Message (DM) to the member with a link for payment corresponding to their chosen Discord Role.
+2) Upon reacting, the bot sends a Direct Message (DM) to the member with a link for payment corresponding to their chosen Discord Role.
 
 ![image](https://github.com/jmurrah/discord-bouncer/assets/110310485/ebfceb95-2170-4654-a4e4-1bb04445b23e)
 
