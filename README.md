@@ -25,7 +25,7 @@ A Discord Bot that leverages Stripe payments for role assignment.
 ## Technologies Utilized
 The entire infrastructure of this Discord Bot is cloud-based, leveraging the complimentary tiers of Make.com and Google Cloud. This ensures continuous, cost-effective operation of the bot.
 
-The specific tools employed include:
+The specific tools used include:
 - Google e2-micro Compute Instance
 - Google Firestore
 - Google Secrets Manager
